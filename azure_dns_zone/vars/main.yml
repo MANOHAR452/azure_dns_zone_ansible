@@ -1,0 +1,6 @@
+---
+# vars file for azure_dns_zone
+vars:
+    env_tag: "{{ env_tag }}"
+    record_name: "{{ record_name }}"
+    ip_address: "{{ ip_address }}"

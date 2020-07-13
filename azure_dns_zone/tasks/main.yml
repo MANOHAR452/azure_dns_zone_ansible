@@ -1,0 +1,37 @@
+---
+- name: create a map for dns_domain_env
+  set_fact:
+    dns_domain_env_map:
+       development: development
+       dev: development
+       test: test
+       manohar: manmsft.com
+
+- name: set dns domain
+  set_fact:
+    dns_domain: "{{ dns_domain_env_map[env_tag] }}"    
+
+# tasks file for azure_dns_zone
+- name: Get facts for one Record Set
+  azure_rm_dnsrecordset_info:
+    resource_group: myrg
+    zone_name: "{{ dns_domain }}"
+    record_type: A
+  register: result
+
+- name: checking record existance
+  set_fact:
+    record_set: "{{ item.fqdn }}"
+  when: item.fqdn == "{{ record_name }}.{{ dns_domain_env_map[env_tag] }}."
+  with_items: "{{ result.dnsrecordsets }}"
+
+- name: ensure an "A" record set with multiple records
+  azure_rm_dnsrecordset:
+    resource_group: myrg
+    relative_name: "{{ record_name }}"
+    zone_name: "{{ dns_domain }}"
+    record_type: A
+    records:
+      - entry: "{{ ip_address }}"
+  when: item.fqdn != "{{ record_name }}.{{ dns_domain_env_map[env_tag] }}." 
+  with_items: "{{ result.dnsrecordsets }}"   
